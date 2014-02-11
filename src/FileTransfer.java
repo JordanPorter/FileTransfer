@@ -1,19 +1,16 @@
-import static java.lang.System.nanoTime;
-
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -119,9 +116,10 @@ public class FileTransfer extends JFrame {
 		panel.setLayout(null);
 		
 		infoScreen = new JTextArea("");
-		infoScreen.setBounds(6, 18, 438, 141);
-		panel.add(infoScreen);
 		infoScreen.setEditable(false);
+		JScrollPane j = new JScrollPane(infoScreen);
+		j.setBounds(6, 18, 438, 141);
+		panel.add(j);
 		
 		JSeparator s = new JSeparator();
 		s.setBounds(6, 97, 438, 10);
@@ -132,15 +130,19 @@ public class FileTransfer extends JFrame {
 		btnMoveFiles.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				// If no File type is input.
 				if(inputFileType.getText().length() <= 0)	{
 					infoScreen.append("Please Input The Type Of File To Move.\n");
 					return;
 				}
+				// If no source Folder or destination Folder selected
 				if(sourceFolder.getText().equalsIgnoreCase("no folder selected") || 
 						destinationFolder.getText().equalsIgnoreCase("no folder selected"))	{
 					infoScreen.append("No Source or Destination Folder Selected\n");
+					return;
 				}
 				else	{
+					// Move All Files With Input File Extension
 					infoScreen.append("Moving Files...\n");
 					moveFiles();
 				}
@@ -150,24 +152,23 @@ public class FileTransfer extends JFrame {
 		contentPane.add(btnMoveFiles);
 	}
 	
+	/**
+	 * moveFiles retrieves the file type that has been input
+	 * and retrieves a list of all files in the source folder
+	 * and copies all the files with the input file type
+	 * to the destination folder.
+	 */
 	public void moveFiles()	{
-		int count = 0;
-		int failed = 0;
-		long start = nanoTime();
-		for(File f : new File(sourceFolder.getText()).listFiles())	{
-			File destinationFile = new File(destinationFolder.getText() + "/" +f.getName());
-			if(f.getName().toLowerCase().contains(inputFileType.getText().toLowerCase()))	{
-				try {
-					Files.copy(f.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				} catch (IOException ex) {
-					failed++;
-					ex.printStackTrace(System.err);
-				}
-				count++;
+		ArrayList<FileCopy> copyTasks = new ArrayList<FileCopy>();
+		for(File f : new File(sourceFolder.getText()).listFiles())	{ // Retrieving list of files
+			if(f.getName().toLowerCase().contains(inputFileType.getText().toLowerCase()))	{ // Check if the file has the input file type
+				copyTasks.add(new FileCopy(destinationFolder.getText(), infoScreen, f));
 			}
 		}
-		long end = nanoTime();
-		infoScreen.append("Moving Took: " + (end-start)/1000000000 + " seconds\n");
-		infoScreen.append("Moving Complete!\nFiles Moved: " + count + " Failed Moves: " + failed + ".\n");
+		infoScreen.append("There Are " + copyTasks.size() + " Files To Copy\n");
+		for(FileCopy f : copyTasks)	{
+			f.start();
+		}
+		infoScreen.append("Finished Copying Files.\n");
 	}
 }
