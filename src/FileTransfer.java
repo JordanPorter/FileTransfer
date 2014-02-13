@@ -169,6 +169,5 @@ public class FileTransfer extends JFrame {
 		for(FileCopy f : copyTasks)	{
 			f.start();
 		}
-		infoScreen.append("Finished Copying Files.\n");
 	}
 }

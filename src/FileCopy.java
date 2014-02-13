@@ -13,6 +13,7 @@ public class FileCopy extends Thread	{
 	private String destination = "";
 	private JTextArea infoScreen;
 	private File sourceFile;
+	private File destinationFile;
 	
 	public FileCopy(String dest, JTextArea infoScreen, File sourceFile)	{
 		this.destination = dest;
@@ -23,7 +24,7 @@ public class FileCopy extends Thread	{
 	public void run()	{
 		long start = nanoTime();
 				try {
-					File destinationFile = new File(destination + "/" + sourceFile.getName());
+					destinationFile = new File(destination + "/" + sourceFile.getName());
 					Files.copy(sourceFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException ex) {
 					ex.printStackTrace(System.err);
@@ -37,4 +38,11 @@ public class FileCopy extends Thread	{
 		infoScreen.setCaretPosition(infoScreen.getDocument().getLength());
 	}
 
+	public long getLength()	{
+		return sourceFile.length();
+	}
+	
+	public long getProgess()	{
+		return destinationFile.length();
+	}
 }
